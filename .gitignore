@@ -1,0 +1,12 @@
+*
+
+!.gitignore
+!LICENSE
+!NOTICE
+!README.md
+
+!xmake.lua
+!init.py
+
+!src
+!src/**
