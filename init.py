@@ -27,11 +27,7 @@ def main():
   remove(Path("build"))
 
   subprocess.run(["xmake", "f", "-v", "--toolchain=" + argv.toolchain])
-  subprocess.run(
-    ["xmake", "project", "-k", "compile_commands", "--outputdir=build"],
-    text=True,
-    stdout=subprocess.PIPE,
-  )
+  subprocess.run(["xmake", "project", "-k", "compile_commands", "--outputdir=build"], text=True, stdout=subprocess.PIPE)
 
 
 if __name__ == "__main__":
