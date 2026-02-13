@@ -12,11 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+module;
+
+// https://stackoverflow.com/a/76440171
+#if _MSC_VER >= 1934
+#include <__msvc_int128.hpp>
+#endif
+
 export module aty.gatk.math.integer;
 
 import std;
 
-import aty.gatk.math.core;
 import aty.gatk.util.tmp;
 
 // clang-format off
@@ -51,31 +57,61 @@ template <typename T>
 concept nonbool_standard_integral = nonbool_standard_unsigned_integral<T> || std::signed_integral<T>;
 
 template <typename T>
-concept size_integral = std::same_as<T, u32> || std::same_as<T, usize>;
+concept for_size_integral = std::same_as<T, u32> || std::same_as<T, usize>;
 
 } // namespace tmp
 
 template <tmp::nonbool_standard_unsigned_integral T>
-constexpr bool is_power_of_2(T x) noexcept
+[[nodiscard]] constexpr bool is_power_of_2(T x) noexcept
 {
-  return (x & (x - 1)) == 0;
+  return x != 0 && (x & (x - 1)) == 0;
 }
 
-namespace fixed_integer {
+namespace fixed_width_integer {
 
-template <usize Bits>
-  requires (Bits >= 128 && is_power_of_2(Bits))
+template <usize WidthBits>
+  requires (WidthBits >= 128 && is_power_of_2(WidthBits))
 class i
 {
 };
 
-template <usize Bits>
-  requires (Bits >= 128 && is_power_of_2(Bits))
+template <usize WidthBits>
+  requires (WidthBits >= 128 && is_power_of_2(WidthBits))
 class u
 {
 };
 
-} // namespace fixed_integer
+} // namespace fixed_width_integer
+
+namespace tmp {
+
+template <typename>
+struct is_custom_fixed_width_signed_integral : std::false_type
+{
+};
+
+template <usize WidthBits>
+struct is_custom_fixed_width_signed_integral<fixed_width_integer::i<WidthBits>> : std::true_type
+{
+};
+
+template <typename T>
+constexpr bool is_custom_fixed_width_signed_integral_v = is_custom_fixed_width_signed_integral<T>::value;
+
+template <typename>
+struct is_custom_fixed_width_unsigned_integral : std::false_type
+{
+};
+
+template <usize WidthBits>
+struct is_custom_fixed_width_unsigned_integral<fixed_width_integer::u<WidthBits>> : std::true_type
+{
+};
+
+template <typename T>
+constexpr bool is_custom_fixed_width_unsigned_integral_v = is_custom_fixed_width_unsigned_integral<T>::value;
+
+} // namespace tmp
 
 } // namespace aty::gatk
 
@@ -90,8 +126,8 @@ __extension__ using u128 = unsigned __int128;
 using i128 = std::_Signed128;
 using u128 = std::_Unsigned128;
 #else
-using i128 = ::aty::gatk::fixed_integer::i<128>;
-using u128 = ::aty::gatk::fixed_integer::u<128>;
+using i128 = ::aty::gatk::fixed_width_integer::i<128>;
+using u128 = ::aty::gatk::fixed_width_integer::u<128>;
 #endif
 
 }
@@ -99,45 +135,151 @@ using u128 = ::aty::gatk::fixed_integer::u<128>;
 
 export namespace aty::gatk::tmp {
 
-template <typename>
-struct is_custom_fixed_signed_integral : std::false_type
+template <typename T>
+concept fixed_width_signed_integral = std::signed_integral<T> || std::same_as<std::remove_cv_t<T>, i128> || is_custom_fixed_width_signed_integral_v<T>;
+
+template <typename T>
+concept fixed_width_unsigned_integral = std::unsigned_integral<T> || std::same_as<std::remove_cv_t<T>, u128> || is_custom_fixed_width_unsigned_integral_v<T>;
+
+template <typename T>
+concept nonbool_fixed_width_unsigned_integral = fixed_width_unsigned_integral<T> && !boolean<T>;
+
+template <typename T>
+concept fixed_width_integral = fixed_width_signed_integral<T> || fixed_width_unsigned_integral<T>;
+
+template <typename T>
+concept nonbool_fixed_width_integral = fixed_width_integral<T> && !boolean<T>;
+
+} // namespace aty::gatk::tmp
+
+namespace aty::gatk::tmp {
+
+template <typename T, typename = std::remove_cv_t<T>>
+struct make_signed_selector
 {
+  using type = std::make_signed_t<T>;
 };
 
-template <usize Bits>
-struct is_custom_fixed_signed_integral<fixed_integer::i<Bits>> : std::true_type
+template <typename T>
+struct make_signed_selector<T, i128>
 {
+  using type = claim_cv_t<T, i128>;
 };
 
 template <typename T>
-constexpr bool is_custom_fixed_signed_integral_v = is_custom_fixed_signed_integral<T>::value;
-
-template <typename T>
-concept fixed_signed_integral = std::signed_integral<T> || std::same_as<std::remove_cv_t<T>, i128> || is_custom_fixed_signed_integral_v<T>;
-
-template <typename>
-struct is_custom_fixed_unsigned_integral : std::false_type
+struct make_signed_selector<T, u128>
 {
+  using type = claim_cv_t<T, i128>;
 };
 
-template <usize Bits>
-struct is_custom_fixed_unsigned_integral<fixed_integer::u<Bits>> : std::true_type
+template <typename T, usize WidthBits>
+struct make_signed_selector<T, fixed_width_integer::i<WidthBits>>
 {
+  using type = claim_cv_t<T, fixed_width_integer::i<WidthBits>>;
+};
+
+template <typename T, usize WidthBits>
+struct make_signed_selector<T, fixed_width_integer::u<WidthBits>>
+{
+  using type = claim_cv_t<T, fixed_width_integer::i<WidthBits>>;
+};
+
+export template <typename T>
+using make_signed = make_signed_selector<T>;
+
+export template <typename T>
+using make_signed_t = make_signed<T>::type;
+
+template <typename T, typename = std::remove_cv_t<T>>
+struct make_unsigned_selector
+{
+  using type = std::make_unsigned_t<T>;
 };
 
 template <typename T>
-constexpr bool is_custom_fixed_unsigned_integral_v = is_custom_fixed_unsigned_integral<T>::value;
+struct make_unsigned_selector<T, i128>
+{
+  using type = claim_cv_t<T, u128>;
+};
 
 template <typename T>
-concept fixed_unsigned_integral = std::unsigned_integral<T> || std::same_as<std::remove_cv_t<T>, u128> || is_custom_fixed_unsigned_integral_v<T>;
+struct make_unsigned_selector<T, u128>
+{
+  using type = claim_cv_t<T, u128>;
+};
+
+template <typename T, usize WidthBits>
+struct make_unsigned_selector<T, fixed_width_integer::i<WidthBits>>
+{
+  using type = claim_cv_t<T, fixed_width_integer::u<WidthBits>>;
+};
+
+template <typename T, usize WidthBits>
+struct make_unsigned_selector<T, fixed_width_integer::u<WidthBits>>
+{
+  using type = claim_cv_t<T, fixed_width_integer::u<WidthBits>>;
+};
+
+export template <typename T>
+using make_unsigned = make_unsigned_selector<T>;
+
+export template <typename T>
+using make_unsigned_t = make_unsigned<T>::type;
+
+template <typename T, usize = (sizeof(T) < sizeof(i32) ? 0 : sizeof(T))>
+struct make_larger_width_selector_for_standard;
 
 template <typename T>
-concept nonbool_fixed_unsigned_integral = fixed_unsigned_integral<T> && !boolean<T>;
+struct make_larger_width_selector_for_standard<T, 0>
+{
+  using type = std::conditional_t<std::signed_integral<T>, claim_cv_t<T, i32>, claim_cv_t<T, u32>>;
+};
 
 template <typename T>
-concept fixed_integral = fixed_signed_integral<T> || fixed_unsigned_integral<T>;
+struct make_larger_width_selector_for_standard<T, sizeof(i32)>
+{
+  using type = std::conditional_t<std::signed_integral<T>, claim_cv_t<T, i64>, claim_cv_t<T, u64>>;
+};
 
 template <typename T>
-concept nonbool_fixed_integral = fixed_integral<T> && !boolean<T>;
+struct make_larger_width_selector_for_standard<T, sizeof(i64)>
+{
+  using type = std::conditional_t<std::signed_integral<T>, claim_cv_t<T, i128>, claim_cv_t<T, u128>>;
+};
+
+template <typename T, typename U = std::remove_cv_t<T>>
+struct make_larger_width_selector_for_custom;
+
+template <typename T>
+struct make_larger_width_selector_for_custom<T, i128>
+{
+  using type = claim_cv_t<T, fixed_width_integer::i<256>>;
+};
+
+template <typename T>
+struct make_larger_width_selector_for_custom<T, u128>
+{
+  using type = claim_cv_t<T, fixed_width_integer::u<256>>;
+};
+
+template <typename T, usize WidthBits>
+struct make_larger_width_selector_for_custom<T, fixed_width_integer::i<WidthBits>>
+{
+  using type = claim_cv_t<T, fixed_width_integer::i<WidthBits * 2>>;
+};
+
+template <typename T, usize WidthBits>
+struct make_larger_width_selector_for_custom<T, fixed_width_integer::u<WidthBits>>
+{
+  using type = claim_cv_t<T, fixed_width_integer::u<WidthBits * 2>>;
+};
+
+// for the given fixed-width integer type: obtains i/u32 if its width is smaller than 32 bits, otherwise obtains a fixed-width integer type with double width
+// cv-qualifiers and signedness are kept
+export template <typename T>
+using make_larger_width = std::conditional_t<sizeof(T) <= sizeof(i64), make_larger_width_selector_for_standard<T>, make_larger_width_selector_for_custom<T>>;
+
+export template <typename T>
+using make_larger_width_t = make_larger_width<T>::type;
 
 } // namespace aty::gatk::tmp
