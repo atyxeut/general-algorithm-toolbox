@@ -41,14 +41,20 @@ using array = array_impl<T, Dims...>::type;
 export namespace tmp {
 
 template <typename>
-struct is_std_array : std::false_type
+struct is_no_cv_std_array : std::false_type
 {
 };
 
 template <typename T, std::size_t N>
-struct is_std_array<std::array<T, N>> : std::true_type
+struct is_no_cv_std_array<std::array<T, N>> : std::true_type
 {
 };
+
+template <typename T>
+constexpr bool is_no_cv_std_array_v = is_no_cv_std_array<T>::value;
+
+template <typename T>
+using is_std_array = is_no_cv_std_array<std::remove_cv_t<T>>;
 
 template <typename T>
 constexpr bool is_std_array_v = is_std_array<T>::value;
@@ -62,7 +68,7 @@ constexpr bool is_std_array_v = is_std_array<T>::value;
 export template <typename TElem, std::size_t Dim, typename T>
 constexpr void fill_array(std::array<TElem, Dim>& arr, const T& val)
 {
-  if constexpr (tmp::is_std_array_v<TElem>)
+  if constexpr (tmp::is_no_cv_std_array_v<TElem>)
     for (auto& inner_arr : arr)
       fill_array(inner_arr, val);
   else
@@ -124,27 +130,39 @@ export template <typename TElem, std::integral TDim, typename... Ts>
 export namespace tmp {
 
 template <typename T>
-struct is_std_ratio : std::false_type
+struct is_no_cv_std_ratio : std::false_type
 {
 };
 
 template <std::intmax_t Numerator, std::intmax_t Denominator>
-struct is_std_ratio<std::ratio<Numerator, Denominator>> : std::true_type
+struct is_no_cv_std_ratio<std::ratio<Numerator, Denominator>> : std::true_type
 {
 };
+
+template <typename T>
+constexpr bool is_no_cv_std_ratio_v = is_no_cv_std_ratio<T>::value;
+
+template <typename T>
+using is_std_ratio = is_no_cv_std_ratio<std::remove_cv_t<T>>;
 
 template <typename T>
 constexpr bool is_std_ratio_v = is_std_ratio<T>::value;
 
 template <typename T>
-struct is_std_duration : std::false_type
+struct is_no_cv_std_duration : std::false_type
 {
 };
 
 template <typename TRep, typename TPeriod>
-struct is_std_duration<std::chrono::duration<TRep, TPeriod>> : std::true_type
+struct is_no_cv_std_duration<std::chrono::duration<TRep, TPeriod>> : std::true_type
 {
 };
+
+template <typename T>
+constexpr bool is_no_cv_std_duration_v = is_no_cv_std_duration<T>::value;
+
+template <typename T>
+using is_std_duration = is_no_cv_std_duration<std::remove_cv_t<T>>;
 
 template <typename T>
 constexpr bool is_std_duration_v = is_std_duration<T>::value;
