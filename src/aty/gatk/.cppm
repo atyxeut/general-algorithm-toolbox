@@ -14,6 +14,8 @@
 
 export module aty.gatk;
 
+export import aty.gatk.data_structure;
 export import aty.gatk.debug;
 export import aty.gatk.math;
+export import aty.gatk.random;
 export import aty.gatk.util;
