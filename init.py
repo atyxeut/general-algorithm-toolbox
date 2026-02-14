@@ -17,12 +17,17 @@ import shutil
 import subprocess
 from pathlib import Path
 
-# > python3 init.py
+# > python3 init.py llvm
 #   by default, specify `llvm` toolchain
+# > python3 init.py llvm release
+#   specify `llvm` toolchain and build in release mode
 # > python3 init.py gcc
 #   specify `gcc` toolchain
+# > python3 init.py gcc release
+#   specify `gcc` toolchain and build in release mode
 parser = argparse.ArgumentParser(add_help=False)
-parser.add_argument("toolchain", type=str, nargs="?", default="llvm")
+parser.add_argument("toolchain", type=str)
+parser.add_argument("build_mode", type=str, nargs="?", default="debug")
 argv = parser.parse_args()
 
 
@@ -40,7 +45,7 @@ def main():
   remove(Path(".xmake"))
   remove(Path("build"))
 
-  subprocess.run(["xmake", "f", "-v", "--toolchain=" + argv.toolchain])
+  subprocess.run(["xmake", "f", "-v", "--toolchain=" + argv.toolchain, "-m", argv.build_mode])
   subprocess.run(["xmake", "project", "-k", "compile_commands", "--outputdir=build"], text=True, stdout=subprocess.PIPE)
 
 
