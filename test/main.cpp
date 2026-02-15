@@ -18,5 +18,5 @@ import test.aatk;
 
 int main()
 {
-  test::aatk::does_make_vector_work();
+  test::aatk::util::does_make_vector_work();
 }

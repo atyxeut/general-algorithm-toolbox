@@ -17,7 +17,7 @@ export module aatk.math.floating_point;
 import std;
 
 import aatk.math.integer;
-import aatk.util.tmp;
+import aatk.meta;
 
 // clang-format off
 export {
@@ -49,7 +49,7 @@ class d
 
 } // namespace ieee754_float
 
-namespace tmp {
+namespace meta {
 
 template <typename>
 struct is_no_cv_custom_ieee754_binary_floating_point : std::false_type
@@ -89,7 +89,7 @@ using is_custom_ieee754_decimal_floating_point = is_no_cv_custom_ieee754_decimal
 template <typename T>
 constexpr bool is_custom_ieee754_decimal_floating_point_v = is_custom_ieee754_decimal_floating_point<T>::value;
 
-} // namespace tmp
+} // namespace meta
 
 } // namespace aatk
 
@@ -101,7 +101,7 @@ export __extension__ using f128 = __float128;
 export using f128 = ::aatk::ieee754_float::f<128>;
 #endif
 
-export namespace aatk::tmp {
+export namespace aatk::meta {
 
 template <typename T>
 concept ieee754_binary_floating_point = std::floating_point<T> || std::same_as<std::remove_cv_t<T>, f128> || is_custom_ieee754_binary_floating_point_v<T>;
@@ -112,13 +112,13 @@ concept ieee754_decimal_floating_point = is_custom_ieee754_decimal_floating_poin
 template <typename T>
 concept ieee754_floating_point = ieee754_binary_floating_point<T> || ieee754_decimal_floating_point<T>;
 
-} // namespace aatk::tmp
+} // namespace aatk::meta
 
 namespace aatk::big_decimal {
 
 }
 
-export namespace aatk::tmp {
+export namespace aatk::meta {
 
 template <typename>
 struct is_no_cv_big_decimal : std::false_type
@@ -142,9 +142,9 @@ constexpr bool is_big_decimal_v = is_big_decimal<T>::value;
 template <typename T>
 concept floating_point = ieee754_floating_point<T> || is_big_decimal_v<T>;
 
-} // namespace aatk::tmp
+} // namespace aatk::meta
 
-namespace aatk::tmp {
+namespace aatk::meta {
 
 template <typename T, typename = std::remove_cv_t<T>, bool = is_big_decimal_v<T>>
 struct make_higher_precision_selector;
@@ -200,4 +200,4 @@ using make_higher_precision = make_higher_precision_selector<T>;
 export template <typename T>
 using make_higher_precision_t = make_higher_precision<T>::type;
 
-} // namespace aatk::tmp
+} // namespace aatk::meta

@@ -21,7 +21,7 @@ import aatk.util.stl_helper;
 namespace aatk::benchmark {
 
 export template <typename TRep, typename TRatio = std::milli, typename TDuration>
-  requires tmp::is_std_duration_v<TDuration>
+  requires meta::is_std_duration_v<TDuration>
 void print_duration_as(TDuration&& duration, bool endline = true)
 {
   const auto dur = std::chrono::duration_cast<std::chrono::duration<TRep, TRatio>>(std::forward<TDuration>(duration));
@@ -35,14 +35,14 @@ void print_duration_as(TDuration&& duration, bool endline = true)
 }
 
 export template <typename TDuration>
-  requires tmp::is_std_duration_v<TDuration>
+  requires meta::is_std_duration_v<TDuration>
 void print_duration(TDuration&& duration, bool endline = true)
 {
   print_duration_as<TDuration::rep, TDuration::period>(std::forward<TDuration>(duration), endline);
 }
 
 template <typename TDuration, typename TResult = void>
-  requires tmp::is_std_duration_v<TDuration>
+  requires meta::is_std_duration_v<TDuration>
 struct timed_invocation_result
 {
   TDuration duration;

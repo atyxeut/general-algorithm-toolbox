@@ -14,5 +14,5 @@
 
 export module test.aatk;
 
+export import test.aatk.meta;
 export import test.aatk.util.stl_helper;
-export import test.aatk.util.tmp;

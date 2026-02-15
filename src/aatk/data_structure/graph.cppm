@@ -28,7 +28,7 @@ struct weight<void>
 {
 };
 
-template <tmp::arithmetic T>
+template <meta::arithmetic T>
 struct weight<T>
 {
   T w;

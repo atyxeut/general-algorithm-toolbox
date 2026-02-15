@@ -18,7 +18,6 @@ import std;
 
 export import aatk.util.misc;
 export import aatk.util.stl_helper;
-export import aatk.util.tmp;
 
 namespace aatk {
 

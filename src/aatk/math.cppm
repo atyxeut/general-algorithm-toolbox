@@ -17,9 +17,9 @@ export module aatk.math;
 export import aatk.math.floating_point;
 export import aatk.math.integer;
 
-export namespace aatk::tmp {
+export namespace aatk::meta {
 
 template <typename T>
 concept arithmetic = integral<T> || floating_point<T>;
 
-} // namespace aatk::tmp
+} // namespace aatk::meta

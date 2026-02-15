@@ -18,5 +18,6 @@ export import aatk.data_structure;
 export import aatk.debug;
 export import aatk.math;
 export import aatk.memory;
+export import aatk.meta;
 export import aatk.random;
 export import aatk.util;

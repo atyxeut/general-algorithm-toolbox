@@ -23,7 +23,7 @@ export module aatk.math.integer;
 
 import std;
 
-import aatk.util.tmp;
+import aatk.meta;
 
 // clang-format off
 export {
@@ -45,7 +45,7 @@ using usize = std::size_t;
 
 export namespace aatk {
 
-namespace tmp {
+namespace meta {
 
 template <typename T>
 concept boolean = std::same_as<std::remove_cv_t<T>, bool>;
@@ -59,9 +59,9 @@ concept nonbool_standard_integral = nonbool_standard_unsigned_integral<T> || std
 template <typename T>
 concept for_size_integral = std::same_as<T, u32> || std::same_as<T, usize>;
 
-} // namespace tmp
+} // namespace meta
 
-template <tmp::nonbool_standard_unsigned_integral T>
+template <meta::nonbool_standard_unsigned_integral T>
 [[nodiscard]] constexpr bool is_power_of_2(T x) noexcept
 {
   return x != 0 && (x & (x - 1)) == 0;
@@ -83,7 +83,7 @@ class u
 
 } // namespace fixed_width_integer
 
-namespace tmp {
+namespace meta {
 
 template <typename>
 struct is_no_cv_custom_fixed_width_signed_integral : std::false_type
@@ -123,7 +123,7 @@ using is_custom_fixed_width_unsigned_integral = is_no_cv_custom_fixed_width_unsi
 template <typename T>
 constexpr bool is_custom_fixed_width_unsigned_integral_v = is_custom_fixed_width_unsigned_integral<T>::value;
 
-} // namespace tmp
+} // namespace meta
 
 } // namespace aatk
 
@@ -145,7 +145,7 @@ using u128 = ::aatk::fixed_width_integer::u<128>;
 }
 // clang-format on
 
-export namespace aatk::tmp {
+export namespace aatk::meta {
 
 template <typename T>
 concept fixed_width_signed_integral = std::signed_integral<T> || std::same_as<std::remove_cv_t<T>, i128> || is_custom_fixed_width_signed_integral_v<T>;
@@ -162,9 +162,9 @@ concept fixed_width_integral = fixed_width_signed_integral<T> || fixed_width_uns
 template <typename T>
 concept nonbool_fixed_width_integral = fixed_width_integral<T> && !boolean<T>;
 
-} // namespace aatk::tmp
+} // namespace aatk::meta
 
-namespace aatk::tmp {
+namespace aatk::meta {
 
 template <typename T, typename = std::remove_cv_t<T>>
 struct make_signed_selector
@@ -238,13 +238,13 @@ using make_unsigned = make_unsigned_selector<T>;
 export template <typename T>
 using make_unsigned_t = make_unsigned<T>::type;
 
-} // namespace aatk::tmp
+} // namespace aatk::meta
 
 namespace aatk::big_integer {
 
 }
 
-export namespace aatk::tmp {
+export namespace aatk::meta {
 
 template <typename>
 struct is_no_cv_big_integer : std::false_type
@@ -274,9 +274,9 @@ concept integral = signed_integral<T> || fixed_width_unsigned_integral<T>;
 template <typename T>
 concept nonbool_integral = integral<T> && !boolean<T>;
 
-} // namespace aatk::tmp
+} // namespace aatk::meta
 
-namespace aatk::tmp {
+namespace aatk::meta {
 
 template <typename T, usize = (sizeof(T) < sizeof(i32) ? 0 : sizeof(T))>
 struct make_larger_width_selector_for_standard;
@@ -341,4 +341,4 @@ using make_larger_width = std::conditional_t<sizeof(T) <= sizeof(i64), make_larg
 export template <typename T>
 using make_larger_width_t = make_larger_width<T>::type;
 
-} // namespace aatk::tmp
+} // namespace aatk::meta
